@@ -49,7 +49,7 @@ app.get("/api/users", async (req, res) => {
 
 app.post("/api/users/:_id/exercises", async (req, res) => {
   try {
-    const date = new Date().toDateString();
+    const date = new Date();
     const user = await User.findById(req.params._id);
     const exercise = await Excercise.create({
       userId: req.params._id,
@@ -63,7 +63,7 @@ app.post("/api/users/:_id/exercises", async (req, res) => {
       username: user.username,
       description: exercise.description,
       duration: exercise.duration,
-      date: exercise.date,
+      date: exercise.date.toDateString(),
     });
   } catch (err) {
     res.status(400).json({
@@ -74,42 +74,33 @@ app.post("/api/users/:_id/exercises", async (req, res) => {
 
 app.get("/api/users/:_id/logs", async (req, res) => {
   try {
-    const from = new Date(req.query.from);
-    const to = new Date(req.query.to);
+    const from = req.query.from ? new Date(req.query.from) : null;
+    const to = req.query.to ? new Date(req.query.to) : null;
     const limit = req.query.limit;
 
-    let query = { userId: req.params._id };
+    let query = Excercise.find({ userId: req.params._id });
 
-    if (req.query.from || req.query.to) {
-      query.$expr = {
-        $and: [],
-      };
-
-      if (req.query.from && !isNaN(new Date(req.query.from))) {
-        query.$expr.$and.push({
-          $gte: [{ $toDate: "$date" }, new Date(req.query.from)],
-        });
-      }
-
-      if (req.query.to && !isNaN(new Date(req.query.to))) {
-        query.$expr.$and.push({
-          $lte: [{ $toDate: "$date" }, new Date(req.query.to)],
-        });
-      }
-
-      if (query.$expr.$and.length === 0) {
-        delete query.$expr;
-      }
+    if (from) {
+      query.gte("date", from);
     }
 
-    let exercises = Excercise.find(query);
-
-    if (req.query.limit) {
-      exercises = exercises.limit(parseInt(limit));
+    if (to) {
+      query.lte("date", to);
     }
 
-    const result = await exercises.exec();
-    res.json(result);
+    if (limit) {
+      query.limit(parseInt(limit));
+    }
+
+    const user = await User.findById(req.params._id);
+    let result = await query.exec();
+    result = result.map((it) => ({ ...it, date: it.date.toDateString() }));
+    res.json({
+      username: user.username,
+      count: result.length,
+      _id: user._id,
+      log: result,
+    });
   } catch (error) {
     res.status(400).json({
       error: error.message,

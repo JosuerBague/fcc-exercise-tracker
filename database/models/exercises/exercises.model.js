@@ -16,8 +16,8 @@ const exerciseSchema = new mongoose.Schema({
     required: true,
   },
   date: {
-    type: String,
-    default: () => new Date().toDateString(),
+    type: Date,
+    default: () => new Date(),
   },
 });
 
