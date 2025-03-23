@@ -72,6 +72,51 @@ app.post("/api/users/:_id/exercises", async (req, res) => {
   }
 });
 
+app.get("/api/users/:_id/logs?[from][&to][&limit]", async (req, res) => {
+  try {
+    const from = new Date(req.query.from);
+    const to = new Date(req.query.to);
+    const limit = req.query.limit;
+
+    let query = { userId: req.params._id };
+
+    if (req.query.from || req.query.to) {
+      query.$expr = {
+        $and: [],
+      };
+
+      if (req.query.from && !isNaN(new Date(req.query.from))) {
+        query.$expr.$and.push({
+          $gte: [{ $toDate: "$date" }, new Date(req.query.from)],
+        });
+      }
+
+      if (req.query.to && !isNaN(new Date(req.query.to))) {
+        query.$expr.$and.push({
+          $lte: [{ $toDate: "$date" }, new Date(req.query.to)],
+        });
+      }
+
+      if (query.$expr.$and.length === 0) {
+        delete query.$expr;
+      }
+    }
+
+    let exercises = Excercise.find(query);
+
+    if (req.query.limit) {
+      exercises = exercises.limit(parseInt(limit));
+    }
+
+    const result = await exercises.exec();
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({
+      error: error.message,
+    });
+  }
+});
+
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log("Your app is listening on port " + listener.address().port);
 });
