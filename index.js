@@ -72,7 +72,7 @@ app.post("/api/users/:_id/exercises", async (req, res) => {
   }
 });
 
-app.get("/api/users/:_id/logs?[from][&to][&limit]", async (req, res) => {
+app.get("/api/users/:_id/logs", async (req, res) => {
   try {
     const from = new Date(req.query.from);
     const to = new Date(req.query.to);
