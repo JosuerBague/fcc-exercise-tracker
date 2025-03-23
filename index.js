@@ -94,7 +94,11 @@ app.get("/api/users/:_id/logs", async (req, res) => {
 
     const user = await User.findById(req.params._id);
     let result = await query.exec();
-    result = result.map((it) => ({ ...it, date: it.date.toDateString() }));
+    result = result.map((it) => ({
+      description: it.description,
+      duration: it.duration,
+      date: it.date.toDateString(),
+    }));
     res.json({
       username: user.username,
       count: result.length,
