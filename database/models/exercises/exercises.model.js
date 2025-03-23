@@ -1,10 +1,11 @@
 import mongoose, { mongo } from "mongoose";
-import { User } from "../models";
+import { User } from "../models.js";
 
 const exerciseSchema = new mongoose.Schema({
-  username: {
-    type: User.username,
+  userId: {
+    type: mongoose.Schema.ObjectId,
     ref: "User",
+    required: true,
   },
   description: {
     type: String,
@@ -15,8 +16,8 @@ const exerciseSchema = new mongoose.Schema({
     required: true,
   },
   date: {
-    type: Date,
-    default: () => Date.now(),
+    type: String,
+    default: () => new Date().toDateString(),
   },
 });
 
