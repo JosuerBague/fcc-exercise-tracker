@@ -1,10 +1,17 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 import { db } from "./database/database.js";
+import { User } from "./database/models/models.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenv.config();
 const app = express();
+db._connect();
 
 app.use(cors());
 app.use(express.static("public"));
@@ -16,11 +23,16 @@ app.get("/", (req, res) => {
 });
 
 app.post("/api/users", async (req, res) => {
-  await db.read();
+  try {
+    const user = await User.create({
+      username: req.body.username,
+    });
 
-  const user = db.users.find((user) => user.username === req.body.username);
-  if (!user) {
-    await db.update(({ users }) => users.push({}));
+    res.json(user);
+  } catch (err) {
+    res.status(400).json({
+      error: err.message,
+    });
   }
 });
 
